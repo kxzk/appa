@@ -28,15 +28,13 @@ Also, [Why We Built Our Own Background Agent](https://builders.ramp.com/post/why
 
 ### Takeaways
 
-This is a proof of concept - rough edges included. The core ideas matter more than the implementation:
+Ramp's background agent now produces **~30% of merged PRs** — in just a couple months.
 
-1. **High-level input → detailed PRD** — Claude Code explores your codebase and writes a thorough plan
-2. **PRD → Linear issue** — plans become trackable work items automatically
-3. **Issue → PR** — assigned issues get implemented without intervention
+The bar isn't perfect autonomous code. It's a meaningful first stab. Even at 60-80% quality, a draft PR beats a blank file. The worst work — spelunking, boilerplate, wiring — is handled.
 
-The unlock: `cd` into a repo, describe what you want in plain English, walk away. You get a tracked issue and a draft PR. Even at 60-80% quality, that's a meaningful starting point to iterate on.
+That's the shift: from *building* to *reviewing*. Engineers describe intent, agents take the first pass, humans iterate. One person can parallelize across tasks. The bottleneck moves from hands-on-keyboard to review bandwidth.
 
-Zooming out: every Linear issue becomes a potential agent session. That's the shift from AI-assisted to AI-driven development - you describe intent, agents execute, you review.
+Teams that operationalize this first won't ship incrementally faster. They'll ship *structurally* faster.
 
 <br>
 
@@ -46,15 +44,11 @@ Zooming out: every Linear issue becomes a potential agent session. That's the sh
 appa "add dark mode support to the settings page for team:ENG project:Mobile"
 ```
 
-1. **You invoke** — describe what you want, specifying the team and project by name
-
-2. **Local agent plans** — Claude Code explores your codebase and writes a PRD
-
-3. **Issue created** — the plan becomes a [Linear](https://linear.app) issue via the `/linear` Claude Code Skill
-
-4. **Remote agent builds** — server-side Claude Code picks it up and implements
-
-5. **PR opens** — you review the draft PR on GitHub
+1. **Invoke** — describe what you want in plain English
+2. **Plan** — local agent explores codebase, writes a PRD
+3. **Track** — PRD becomes a [Linear](https://linear.app) issue
+4. **Build** — remote agent implements and opens a draft PR
+5. **Review** — you iterate on the PR
 
 ```
 ☁️  Planning...
@@ -67,44 +61,28 @@ appa "add dark mode support to the settings page for team:ENG project:Mobile"
 ## Architecture
 
 ```
-  ╭──────────────────────────── LOCAL ────────────────────────────╮
-  │                                                               │
-  │    appa.sh  ───▶  Claude Code  ───▶  /linear                  │
-  │                    (plans)           (creates)                │
-  │                                                               │
-  ╰───────────────────────────────┬───────────────────────────────╯
-                                  │
-                                  ▼
-                            ┌──────────┐
-                            │  Linear  │
-                            └──────────┘
-                                  │
-                                  ▼
-  ╭──────────────────────────── REMOTE ───────────────────────────╮
-  │                                                               │
-  │    cron  ───▶  linear_cli.py  ───▶  Claude Code  ───▶  PR ✓   │
-  │               (fetches)            (implements)               │
-  │                                                               │
-  ╰───────────────────────────────────────────────────────────────╯
+  ╭───────────────────────── LOCAL ──────────────────────────╮
+  │                                                          │
+  │    appa.sh  ───▶  Claude Code  ───▶  /linear skill       │
+  │                   (explores, plans)   (creates issue)    │
+  │                                                          │
+  ╰────────────────────────────┬─────────────────────────────╯
+                               ▼
+                         ┌──────────┐
+                         │  Linear  │
+                         └──────────┘
+                               ▼
+  ╭───────────────────────── REMOTE ─────────────────────────╮
+  │                                                          │
+  │    cron  ───▶  poll issues  ───▶  Claude Code  ───▶  PR  │
+  │                                   (implements)           │
+  │                                                          │
+  ╰──────────────────────────────────────────────────────────╯
 ```
 
-### Local (`appa.sh` + `/linear` skill)
+**Local** — `appa.sh` invokes Claude Code which explores the codebase, writes a PRD, and creates a Linear issue via the `/linear` skill.
 
-The local side handles planning and issue creation:
-
-- Invokes Claude Code with `--dangerously-skip-permissions`
-- Agent spawns sub-agents to explore codebase and craft a detailed PRD
-- Uses `/linear` skill (`linear/linear.py`) to resolve team/project names → IDs
-- Creates the Linear issue with the PRD as the body
-
-### Remote (`appa_remote.sh` + `linear/linear.py`)
-
-The remote side handles execution:
-
-- `./linear.py` — minimal GraphQL client invoked directly (e.g., `./linear.py list-issues --recent 2`)
-- `appa_remote.sh` — polls for issues assigned to you (created in last 15 min)
-- On new issue: fetches details, invokes Claude Code to implement
-- Agent creates branch, commits, pushes, opens draft PR
+**Remote** — `appa_remote.sh` polls for assigned issues, hands them to Claude Code for implementation, and opens draft PRs.
 
 <br>
 
@@ -112,32 +90,20 @@ The remote side handles execution:
 
 ### Requirements
 
-**Local**
 - [Claude Code](https://github.com/anthropics/claude-code)
 - [uv](https://docs.astral.sh/uv/) (`curl -LsSf https://astral.sh/uv/install.sh | sh`)
-- `LINEAR_API_KEY` env var ([get one here](https://linear.app/settings/api))
+- [gh](https://cli.github.com/) CLI (remote only, for PR creation)
+- `LINEAR_API_KEY` env var ([get one](https://linear.app/settings/api))
 
-**Remote**
-- [Claude Code](https://github.com/anthropics/claude-code)
-- [uv](https://docs.astral.sh/uv/) (`curl -LsSf https://astral.sh/uv/install.sh | sh`)
-- [gh](https://cli.github.com/) CLI authenticated for PR creation
-- `LINEAR_API_KEY` env var
-
-### Local
+### Usage
 
 ```bash
-# Add to PATH or alias
+# Local: alias the script
 alias appa="/path/to/appa.sh"
+
+# Remote: cron job to poll for issues
+* * * * * /path/to/appa_remote.sh >> ~/appa.log 2>&1
 ```
-
-### Remote
-
-```bash
-# On your server, set up cron to poll
-* * * * * /home/ubuntu/appa_remote.sh >> /home/ubuntu/appa.log 2>&1
-```
-
-Ensure repos are cloned locally on the server and `gh` is authenticated.
 
 <br>
 
