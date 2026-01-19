@@ -7,7 +7,7 @@ Describe a task. Get back a PR.
 <br>
 
 > [!WARNING]
-> 🚧 Early development — not yet ready for use. Mostly a POC.
+> 🚧 Highly, highly, highly experimental (safety goggles advised). The main caveat: you must **manually assign issues to yourself** in Linear after creation. [Linearite](https://github.com/kxzk/linearite) doesn't support setting assignees on create yet—the remote agent polls for issues assigned to you (Plus, it takes two seconds two vibe code a Linear CLI).
 
 <br>
 
@@ -17,7 +17,7 @@ Describe a task. Get back a PR.
 > — [@jeffzwang](https://x.com/jeffzwang/)
 <details>
   <summary>Original X Post</summary>
-    
+
   ![IMG_4399](https://github.com/user-attachments/assets/783d9e0f-6f27-4148-bd0f-173fd987b783)
 
 </details>
@@ -27,28 +27,105 @@ Describe a task. Get back a PR.
 ## How it works
 
 ```
-appa "add dark mode support to the settings page"
+appa "add dark mode support to the settings page for team:ENG project:Mobile"
 ```
 
-1. **You invoke** — describe what you want in natural language
+1. **You invoke** — describe what you want, specifying the team and project by name
 
-2. **Local agent plans** — a coding agent breaks it down into a structured plan
+2. **Local agent plans** — Claude Code explores your codebase and writes a PRD
 
-3. **Issue created** — the plan becomes a [Linear](https://linear.app) issue automatically
+3. **Issue created** — the plan becomes a [Linear](https://linear.app) issue via [Linearite](https://github.com/kxzk/linearite)
 
-4. **Remote agent builds** — a server-side agent picks it up and implements
+4. **You assign** — assign the issue to yourself in Linear (triggers the remote agent)
 
-5. **PR opens** — you review the result on GitHub
+5. **Remote agent builds** — server-side Claude Code picks it up and implements
+
+6. **PR opens** — you review the draft PR on GitHub
 
 ```
 ☁️  Planning...
 ☁️  Created issue: ENG-142 "Add dark mode support to settings page"
-☁️  Queued for implementation
+☁️  Assign to yourself in Linear to queue for implementation
 
-    ↓ (minutes later)
+    ↓ (after assignment)
 
 ☁️  PR #87 opened: https://github.com/you/repo/pull/87
 ```
+
+<br>
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  LOCAL                                                          │
+│                                                                 │
+│  appa.sh ─────► Claude Code ─────► Linearite ─────► Linear      │
+│                 (plans task)       (creates issue)              │
+└─────────────────────────────────────────────────────────────────┘
+                                            │
+                                            ▼
+                                     manual assignment
+                                            │
+                                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  REMOTE (server)                                                │
+│                                                                 │
+│  cron ─► appa_remote.sh ─► linear_cli.py ─► Claude Code ─► PR   │
+│          (polls issues)     (fetches mine)   (implements)       │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Local (`appa.sh` + Linearite)
+
+The local side handles planning and issue creation:
+
+- Invokes Claude Code with `--dangerously-skip-permissions`
+- Agent spawns sub-agents to explore codebase and craft a detailed PRD
+- Uses [Linearite](https://github.com/kxzk/linearite) to resolve team/project names → IDs
+- Creates the Linear issue with the PRD as the body
+
+### Remote (`appa_remote.sh` + `linear_cli.py`)
+
+The remote side handles execution:
+
+- `linear_cli.py` — minimal GraphQL client to list/get Linear issues
+- `appa_remote.sh` — polls for issues assigned to you (created in last 15 min)
+- On new issue: fetches details, invokes Claude Code to implement
+- Agent creates branch, commits, pushes, opens draft PR
+
+<br>
+
+## Setup
+
+### Requirements
+
+**Local**
+- [Claude Code](https://github.com/anthropics/claude-code)
+- [Linearite](https://github.com/kxzk/linearite) (`curl -fsSL https://kade.work/linearite/install | sh`)
+- `LINEAR_API_KEY` env var ([get one here](https://linear.app/settings/api))
+
+**Remote**
+- [Claude Code](https://github.com/anthropics/claude-code)
+- [uv](https://docs.astral.sh/uv/) (`curl -LsSf https://astral.sh/uv/install.sh | sh`)
+- `LINEAR_API_KEY` env var
+- `gh` CLI authenticated for PR creation
+
+### Local
+
+```bash
+# Add to PATH or alias
+alias appa="/path/to/appa.sh"
+```
+
+### Remote
+
+```bash
+# On your server, set up cron to poll
+*/5 * * * * /home/ubuntu/appa_remote.sh >> /home/ubuntu/appa.log 2>&1
+```
+
+Ensure repos are cloned locally on the server and `gh` is authenticated.
 
 <br>
 
