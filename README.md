@@ -90,8 +90,8 @@ appa "add dark mode support to the settings page for team:ENG project:Mobile"
 
 ### Requirements
 
-- [Claude Code](https://github.com/anthropics/claude-code)
-- [uv](https://docs.astral.sh/uv/) (`curl -LsSf https://astral.sh/uv/install.sh | sh`)
+- [claude code](https://code.claude.com/docs/en/setup)
+- [uv](https://docs.astral.sh/uv/getting-started/installation/)
 - [gh](https://cli.github.com/) CLI (remote only, for PR creation)
 - `LINEAR_API_KEY` env var ([get one](https://linear.app/settings/api))
 
@@ -101,7 +101,7 @@ appa "add dark mode support to the settings page for team:ENG project:Mobile"
 # Local: alias the script
 alias appa="/path/to/appa.sh"
 
-# Remote: cron job to poll for issues
+# Remote: cron job to poll for issues (make sure it can access Linear API Key)
 * * * * * /path/to/appa_remote.sh >> ~/appa.log 2>&1
 ```
 
