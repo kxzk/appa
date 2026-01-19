@@ -20,7 +20,7 @@ Describe a task. Get back a PR.
 <br>
 
 > [!WARNING]
-> 🚧 Highly, highly, highly experimental (safety goggles advised). The main caveat: you must **manually assign issues to yourself** in Linear after creation. [Linearite](https://github.com/kxzk/linearite) doesn't support setting assignees on create yet - the remote agent polls for issues assigned to you (it takes two seconds two vibe code a Linear CLI).
+> 🚧 Don't actually use this. It's a POC to validate the idea. The main caveat: you must **manually assign issues to yourself** in Linear after creation. [Linearite](https://github.com/kxzk/linearite) (only used because I created it) doesn't support setting assignees on create yet - the remote agent polls for issues assigned to you (it takes two seconds two vibe code a Linear CLI).
 
 <br>
 
@@ -71,23 +71,25 @@ appa "add dark mode support to the settings page for team:ENG project:Mobile"
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│  LOCAL                                                          │
-│                                                                 │
-│  appa.sh ─────► Claude Code ─────► Linearite ─────► Linear      │
-│                 (plans task)       (creates issue)              │
-└─────────────────────────────────────────────────────────────────┘
-                                            │
-                                            ▼
-                                     manual assignment
-                                            │
-                                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  REMOTE (server)                                                │
-│                                                                 │
-│  cron ─► appa_remote.sh ─► linear_cli.py ─► Claude Code ─► PR   │
-│          (polls issues)     (fetches mine)   (implements)       │
-└─────────────────────────────────────────────────────────────────┘
+  ╭──────────────────────────── LOCAL ────────────────────────────╮
+  │                                                               │
+  │    appa.sh  ───▶  Claude Code  ───▶  Linearite                │
+  │                    (plans)           (creates)                │
+  │                                                               │
+  ╰───────────────────────────────┬───────────────────────────────╯
+                                  │
+                                  ▼
+                            ┌──────────┐
+                            │  Linear  │
+                            └──────────┘
+                                  │
+                                  ▼
+  ╭──────────────────────────── REMOTE ───────────────────────────╮
+  │                                                               │
+  │    cron  ───▶  linear_cli.py  ───▶  Claude Code  ───▶  PR ✓   │
+  │               (fetches)            (implements)               │
+  │                                                               │
+  ╰───────────────────────────────────────────────────────────────╯
 ```
 
 ### Local (`appa.sh` + Linearite)
@@ -122,8 +124,8 @@ The remote side handles execution:
 **Remote**
 - [Claude Code](https://github.com/anthropics/claude-code)
 - [uv](https://docs.astral.sh/uv/) (`curl -LsSf https://astral.sh/uv/install.sh | sh`)
+- [gh](https://cli.github.com/) CLI authenticated for PR creation
 - `LINEAR_API_KEY` env var
-- `gh` CLI authenticated for PR creation
 
 ### Local
 
