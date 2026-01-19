@@ -6,13 +6,8 @@ Describe a task. Get back a PR.
 
 <br>
 
-> [!WARNING]
-> 🚧 Highly, highly, highly experimental (safety goggles advised). The main caveat: you must **manually assign issues to yourself** in Linear after creation. [Linearite](https://github.com/kxzk/linearite) doesn't support setting assignees on create yet—the remote agent polls for issues assigned to you (Plus, it takes two seconds two vibe code a Linear CLI).
-
-<br>
-
 ### Inspiration
-> "I need Linear but where every task is automatically an AI agent session that at least takes a first stab at the task."
+> "I need Linear but where every task is automatically an AI agent session that at least takes a first stab at the task. Basically a todo list that tries to do itself"
 >
 > — [@jeffzwang](https://x.com/jeffzwang/)
 <details>
@@ -21,6 +16,11 @@ Describe a task. Get back a PR.
   ![IMG_4399](https://github.com/user-attachments/assets/783d9e0f-6f27-4148-bd0f-173fd987b783)
 
 </details>
+
+<br>
+
+> [!WARNING]
+> 🚧 Highly, highly, highly experimental (safety goggles advised). The main caveat: you must **manually assign issues to yourself** in Linear after creation. [Linearite](https://github.com/kxzk/linearite) doesn't support setting assignees on create yet—the remote agent polls for issues assigned to you (it takes two seconds two vibe code a Linear CLI).
 
 <br>
 
@@ -34,7 +34,7 @@ appa "add dark mode support to the settings page for team:ENG project:Mobile"
 
 2. **Local agent plans** — Claude Code explores your codebase and writes a PRD
 
-3. **Issue created** — the plan becomes a [Linear](https://linear.app) issue via [Linearite](https://github.com/kxzk/linearite)
+3. **Issue created** — the plan becomes a [Linear](https://linear.app) issue via [Linearite](https://github.com/kxzk/linearite) (invoked via Claude Code Skill)
 
 4. **You assign** — assign the issue to yourself in Linear (triggers the remote agent)
 
