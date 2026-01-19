@@ -17,6 +17,8 @@ Describe a task. Get back a PR.
 
 </details>
 
+Also, [Why We Built Our Own Background Agent](https://builders.ramp.com/post/why-we-built-our-background-agent).
+
 <br>
 
 > [!WARNING]
