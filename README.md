@@ -20,7 +20,21 @@ Describe a task. Get back a PR.
 <br>
 
 > [!WARNING]
-> 🚧 Highly, highly, highly experimental (safety goggles advised). The main caveat: you must **manually assign issues to yourself** in Linear after creation. [Linearite](https://github.com/kxzk/linearite) doesn't support setting assignees on create yet—the remote agent polls for issues assigned to you (it takes two seconds two vibe code a Linear CLI).
+> 🚧 Highly, highly, highly experimental (safety goggles advised). The main caveat: you must **manually assign issues to yourself** in Linear after creation. [Linearite](https://github.com/kxzk/linearite) doesn't support setting assignees on create yet - the remote agent polls for issues assigned to you (it takes two seconds two vibe code a Linear CLI).
+
+<br>
+
+### Takeaways
+
+This is a proof of concept - rough edges included. The core ideas matter more than the implementation:
+
+1. **High-level input → detailed PRD** — Claude Code explores your codebase and writes a thorough plan
+2. **PRD → Linear issue** — plans become trackable work items automatically
+3. **Issue → PR** — assigned issues get implemented without intervention
+
+The unlock: `cd` into a repo, describe what you want in plain English, walk away. You get a tracked issue and a draft PR. Even at 60-80% quality, that's a meaningful starting point to iterate on.
+
+Zooming out: every Linear issue becomes a potential agent session. That's the shift from AI-assisted to AI-driven development - you describe intent, agents execute, you review.
 
 <br>
 
