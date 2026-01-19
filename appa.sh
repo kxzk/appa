@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ -z "$1" ]]; then
-    echo "Usage: appa \"<task description>\""
+    echo "☁️ Usage: appa \"<task description>\""
     exit 1
 fi
 
@@ -13,10 +13,10 @@ $TASK
 
 IMPORTANT:
 - the user will specify the team and project to use by name
-- you must use linearite to find the IDs for BOTH before creating the issue
+- you must use /linear to find the IDs for BOTH before creating the issue (list-teams, list-projects)
 - once you finish reviewing and have your final plan write it to: \`appa_plan.md\`
 - please include the repository in the plan at the end like: REPOSITORY: <repo_name>
-- then create an issue using linearite where appa_plan.md is the body of the issue
+- then create an issue using /linear create-issue where appa_plan.md is the body of the issue
 - come up with a title inspired by the plan but keep it short 72 chars or less
 - once issue is created delete appa_plan.md"
 

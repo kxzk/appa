@@ -4,10 +4,10 @@ cd /home/ubuntu
 
 SEEN_FILE="issues_seen.txt"
 
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] Checking for new issues..."
+echo "☁️ [$(date '+%Y-%m-%d %H:%M:%S')] Checking for new issues..."
 
-# List recent issues assigned to me (last 3 minutes)
-output=$(./linear_cli.py list --mine --recent 3 2>/dev/null)
+# List recent issues assigned to me (last 2 minutes)
+output=$(./linear.py list-issues --recent 2 2>/dev/null)
 
 # Extract issue ID (format: TEAM-123)
 issue_id=$(echo "$output" | grep -oE '[A-Z]+-[0-9]+' | head -1)
@@ -15,19 +15,19 @@ issue_id=$(echo "$output" | grep -oE '[A-Z]+-[0-9]+' | head -1)
 if [[ -n "$issue_id" ]]; then
     # Check if issue has already been seen
     if [[ -f "$SEEN_FILE" ]] && grep -qx "$issue_id" "$SEEN_FILE"; then
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Issue $issue_id already processed, skipping"
+        echo "☁️ [$(date '+%Y-%m-%d %H:%M:%S')] Issue $issue_id already processed, skipping"
         exit 0
     fi
 
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Found new issue: $issue_id"
+    echo "☁️ [$(date '+%Y-%m-%d %H:%M:%S')] Found new issue: $issue_id"
 
     # Add issue to seen file
     echo "$issue_id" >> "$SEEN_FILE"
 
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting Claude Code to process issue..."
+    echo "☁️ [$(date '+%Y-%m-%d %H:%M:%S')] Starting Claude Code to process issue..."
 
     # Get issue details and write to issue.md
-    ./linear_cli.py get "$issue_id" > issue.md
+    ./linear.py get-issue "$issue_id" > issue.md
 
     # Invoke claude code with the issue
     {
@@ -68,7 +68,7 @@ gh pr create --draft --title "ISSUE_ID"
 ```
 PROMPT
     } | claude -p --dangerously-skip-permissions --allowedTools "*" &
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Claude Code started in background (PID: $!)"
+    echo "☁️ [$(date '+%Y-%m-%d %H:%M:%S')] Claude Code started in background (PID: $!)"
 else
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] No new issues found"
+    echo "☁️ [$(date '+%Y-%m-%d %H:%M:%S')] No new issues found"
 fi

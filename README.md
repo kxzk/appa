@@ -22,7 +22,7 @@ Also, [Why We Built Our Own Background Agent](https://builders.ramp.com/post/why
 <br>
 
 > [!WARNING]
-> 🚧 Don't actually use this. It's a POC to validate the idea. The main caveat: you must **manually assign issues to yourself** in Linear after creation. [Linearite](https://github.com/kxzk/linearite) (only used because I created it) doesn't support setting assignees on create yet - the remote agent polls for issues assigned to you (it takes two seconds two vibe code a Linear CLI).
+> 🚧 Don't actually use this. It's a POC to validate the idea.
 
 <br>
 
@@ -50,21 +50,15 @@ appa "add dark mode support to the settings page for team:ENG project:Mobile"
 
 2. **Local agent plans** — Claude Code explores your codebase and writes a PRD
 
-3. **Issue created** — the plan becomes a [Linear](https://linear.app) issue via [Linearite](https://github.com/kxzk/linearite) (invoked via Claude Code Skill)
+3. **Issue created** — the plan becomes a [Linear](https://linear.app) issue via the `/linear` Claude Code Skill
 
-4. **You assign** — assign the issue to yourself in Linear (triggers the remote agent)
+4. **Remote agent builds** — server-side Claude Code picks it up and implements
 
-5. **Remote agent builds** — server-side Claude Code picks it up and implements
-
-6. **PR opens** — you review the draft PR on GitHub
+5. **PR opens** — you review the draft PR on GitHub
 
 ```
 ☁️  Planning...
 ☁️  Created issue: ENG-142 "Add dark mode support to settings page"
-☁️  Assign to yourself in Linear to queue for implementation
-
-    ↓ (after assignment)
-
 ☁️  PR #87 opened: https://github.com/you/repo/pull/87
 ```
 
@@ -75,7 +69,7 @@ appa "add dark mode support to the settings page for team:ENG project:Mobile"
 ```
   ╭──────────────────────────── LOCAL ────────────────────────────╮
   │                                                               │
-  │    appa.sh  ───▶  Claude Code  ───▶  Linearite                │
+  │    appa.sh  ───▶  Claude Code  ───▶  /linear                  │
   │                    (plans)           (creates)                │
   │                                                               │
   ╰───────────────────────────────┬───────────────────────────────╯
@@ -94,20 +88,20 @@ appa "add dark mode support to the settings page for team:ENG project:Mobile"
   ╰───────────────────────────────────────────────────────────────╯
 ```
 
-### Local (`appa.sh` + Linearite)
+### Local (`appa.sh` + `/linear` skill)
 
 The local side handles planning and issue creation:
 
 - Invokes Claude Code with `--dangerously-skip-permissions`
 - Agent spawns sub-agents to explore codebase and craft a detailed PRD
-- Uses [Linearite](https://github.com/kxzk/linearite) to resolve team/project names → IDs
+- Uses `/linear` skill (`linear/linear.py`) to resolve team/project names → IDs
 - Creates the Linear issue with the PRD as the body
 
-### Remote (`appa_remote.sh` + `linear_cli.py`)
+### Remote (`appa_remote.sh` + `linear/linear.py`)
 
 The remote side handles execution:
 
-- `linear_cli.py` — minimal GraphQL client to list/get Linear issues
+- `./linear.py` — minimal GraphQL client invoked directly (e.g., `./linear.py list-issues --recent 2`)
 - `appa_remote.sh` — polls for issues assigned to you (created in last 15 min)
 - On new issue: fetches details, invokes Claude Code to implement
 - Agent creates branch, commits, pushes, opens draft PR
@@ -120,7 +114,7 @@ The remote side handles execution:
 
 **Local**
 - [Claude Code](https://github.com/anthropics/claude-code)
-- [Linearite](https://github.com/kxzk/linearite) (`curl -fsSL https://kade.work/linearite/install | sh`)
+- [uv](https://docs.astral.sh/uv/) (`curl -LsSf https://astral.sh/uv/install.sh | sh`)
 - `LINEAR_API_KEY` env var ([get one here](https://linear.app/settings/api))
 
 **Remote**
@@ -140,7 +134,7 @@ alias appa="/path/to/appa.sh"
 
 ```bash
 # On your server, set up cron to poll
-*/5 * * * * /home/ubuntu/appa_remote.sh >> /home/ubuntu/appa.log 2>&1
+* * * * * /home/ubuntu/appa_remote.sh >> /home/ubuntu/appa.log 2>&1
 ```
 
 Ensure repos are cloned locally on the server and `gh` is authenticated.
