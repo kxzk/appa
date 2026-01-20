@@ -6,6 +6,10 @@ Describe a task. Get back a PR.
 
 <br>
 
+![header](./images/header.jpg)
+
+<br>
+
 ### Inspiration
 > "I need Linear but where every task is automatically an AI agent session that at least takes a first stab at the task. Basically a todo list that tries to do itself"
 >
